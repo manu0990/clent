@@ -127,16 +127,19 @@ def delete_conversation(session_id: str):
     if not session_dir.exists():
         raise FileNotFoundError(f"Session '{session_id}' not found.")
 
-    shutil.rmtree(session_dir)
+    try:
+        shutil.rmtree(session_dir)
+        print(f"Session: {session_id} cleared successfully.")
 
-    print(f"Deleted session: {session_id}")
+    except Exception as e:
+        raise RuntimeError(f"Failed to delete session: {e}") from e
 
 
 # ==========================================
 # LIST CONVERSATIONS
 # ==========================================
 
-def list_conversations() -> list:
+def list_all_sessions() -> list:
     """
     List all conversation ids.
     """
@@ -154,31 +157,31 @@ def list_conversations() -> list:
 # TEST
 # ==========================================
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    # create new session
-    response = save_message(
-        [{"role": "user", "content": "Hello"}]
-    )
+#     # create new session
+#     response = save_message(
+#         [{"role": "user", "content": "Hello"}]
+#     )
 
-    session_id = response["session_id"]
+#     session_id = response["session_id"]
 
-    print("\nCreated:")
-    print(response)
+#     print("\nCreated:")
+#     print(response)
 
-    # continue session
-    save_message(
-        [{"role": "assistant", "content": "Hi there!"}],
-        session_id=session_id
-    )
+#     # continue session
+#     save_message(
+#         [{"role": "assistant", "content": "Hi there!"}],
+#         session_id=session_id
+#     )
 
-    # fetch messages
-    print("\nMessages:")
-    print(get_messages(session_id))
+#     # fetch messages
+#     print("\nMessages:")
+#     print(get_messages(session_id))
 
-    # list all sessions
-    print("\nSessions:")
-    print(list_conversations())
+#     # list all sessions
+#     print("\nSessions:")
+#     print(list_all_sessions())
 
-    # delete session
-    # delete_conversation(session_id)
+#     # delete session
+#     # delete_conversation(session_id)

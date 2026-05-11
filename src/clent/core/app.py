@@ -1,7 +1,7 @@
 from .commands import commands
 from .chat import ChatStream
 from ..prompts.system_prompt import SYSTEM_PROMPT
-from .conversation import get_messages, save_message
+from .conversation import get_messages, save_message, delete_conversation, list_all_sessions
 
 
 def app():
@@ -15,7 +15,7 @@ def app():
 
     try:
         while True:
-            user_input = input("➤  ")
+            user_input = input("\n➤  ")
 
             if not user_input:
                 continue
@@ -23,7 +23,7 @@ def app():
             # command mode
             if user_input.startswith("/") or user_input == "?":
                 result = (
-                    commands(user_input[1:])
+                    commands(user_input[1:], session_id=CURRENT_SESSION_ID)
                     if user_input.startswith("/")
                     else commands("?")
                 )
@@ -33,6 +33,24 @@ def app():
 
                 if result["action"] == "exit":
                     break
+
+                if result["action"] == "new_chat":
+                    CURRENT_SESSION_ID = None
+                    messages = [SYSTEM_PROMPT]
+                    print("Started a new chat session.")
+
+                if result["action"] == "clear":
+                    delete_conversation(CURRENT_SESSION_ID)
+                    CURRENT_SESSION_ID = None
+                    messages = [SYSTEM_PROMPT]
+                
+                if result["action"] == "list_sessions":
+                    sessions = list_all_sessions()
+                    if not sessions:
+                        print("No sessions found.")
+                    else:
+                        print("Available sessions:\n" + "\n".join(f"- {s}" for s in sessions))
+                
                 continue
 
             # llm mode
