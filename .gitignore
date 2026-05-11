@@ -10,3 +10,6 @@ wheels/
 
 
 .env
+
+
+src/clent/settings.json
