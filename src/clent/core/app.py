@@ -1,9 +1,18 @@
 from .commands import commands
 from .chat import ChatStream
+from ..prompts.system_prompt import SYSTEM_PROMPT
+from .conversation import get_messages, save_message
 
-messages = []
 
 def app():
+    global CURRENT_SESSION_ID
+    CURRENT_SESSION_ID = None
+    global messages
+    messages = [SYSTEM_PROMPT]
+
+    if CURRENT_SESSION_ID:
+        messages.extend(get_messages(CURRENT_SESSION_ID))
+
     try:
         while True:
             user_input = input("➤  ")
@@ -13,27 +22,34 @@ def app():
 
             # command mode
             if user_input.startswith("/") or user_input == "?":
-                result = commands(user_input[1:]) if user_input.startswith("/") else commands("?")
+                result = (
+                    commands(user_input[1:])
+                    if user_input.startswith("/")
+                    else commands("?")
+                )
 
                 if result["message"]:
                     print(result["message"])
 
                 if result["action"] == "exit":
                     break
-
                 continue
-            
-            messages.append({"role": "user", "content": user_input})
 
             # llm mode
             print("✤  ", end="", flush=True)
             try:
-                print(messages)
+                messages.append({"role": "user", "content": user_input})
+
                 full_response = ""
                 for text in ChatStream(messages):
                     print(text, end="", flush=True)
-                    full_response += text               
-                messages.append({"role": "assistant", "content": full_response})
+                    full_response += text
+
+                messages.append({"role": "assistant", "content": full_response.strip()})
+                msg_res = save_message(messages=messages[1:], session_id=CURRENT_SESSION_ID)
+
+                if not CURRENT_SESSION_ID and msg_res["success"] and msg_res["session_id"]:
+                    CURRENT_SESSION_ID = msg_res["session_id"]
 
             except Exception as exc:
                 print(f"\n\nError: {exc}\n", end="")
@@ -48,4 +64,3 @@ def app():
 
 if __name__ == "__main__":
     app()
-

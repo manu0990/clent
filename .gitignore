@@ -13,3 +13,4 @@ wheels/
 
 
 src/clent/settings.json
+src/clent/sessions/
